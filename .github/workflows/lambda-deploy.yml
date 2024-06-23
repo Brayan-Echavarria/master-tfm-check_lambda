@@ -1,0 +1,61 @@
+name: Deploy Lambda Function
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Check-Lambda
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install jq
+        run: sudo apt-get install jq
+
+      - name: Read configuration file
+        id: read-config
+        run: |
+          config=$(cat workflowfile.json)
+          echo "::set-output name=region::$(echo $config | jq -r .environment.region)"
+          echo "::set-output name=bucket_name::$(echo $config | jq -r .environment.bucket_name)"
+          echo "::set-output name=lambda_function_name::$(echo $config | jq -r .environment.lambda_function_name)"
+          echo "::set-output name=s3_key::$(echo $config | jq -r .environment.s3_key)"
+
+      - name: Package Lambda function
+        run: |
+          mkdir -p package
+          cp -r src/* package/
+          pip install --upgrade pip
+          pip install --target ./package -r requirements.txt
+          cd package
+          zip -r ../lambda_function.zip .
+          cd ..
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ steps.read-config.outputs.region }}
+
+      - name: Upload Lambda function to S3
+        run: |
+          aws s3 cp lambda_function.zip s3://${{ steps.read-config.outputs.bucket_name }}/${{ steps.read-config.outputs.s3_key }}
+
+      - name: Update Lambda function code
+        run: |
+          aws lambda update-function-code --function-name ${{ steps.read-config.outputs.lambda_function_name }} --s3-bucket ${{ steps.read-config.outputs.bucket_name }} --s3-key ${{ steps.read-config.outputs.s3_key }}
+
+      - name: Clean up
+        run: |
+          rm -rf package lambda_function.zip

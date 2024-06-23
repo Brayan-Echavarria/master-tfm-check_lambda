@@ -1,0 +1,9 @@
+{
+    "environment": {
+      "region": "eu-west-1",
+      "bucket_name": "tfm-twcam-lambda",
+      "lambda_function_name": "tfm-twcam-sns_check_lambda",
+      "s3_key": "tfm-twcam-lambda_sns_check_function.zip"
+    }
+  }
+  
