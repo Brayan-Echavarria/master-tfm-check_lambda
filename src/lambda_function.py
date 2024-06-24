@@ -100,18 +100,18 @@ def lambda_handler(event, context):
         accuracy = calculate_accuracy(predicted_qualities, actual_qualities)
 
         # Create message for SNS
-        message = f"Total data points: {total_data}\n"
-        message += f"Accuracy: {accuracy}%\n"
+        message = f"Cantidad de datos usados en el test: {total_data}\n"
+        message += f"Precision del modelo: {accuracy}%\n"
         if accuracy < 80:
-            message += "Model may be outdated."
+            message += "El modelo puede estar desactualizado."
         else:
-            message += "Model is up to date."
+            message += "El modelo esta actualizado"
 
         # Send message to SNS
         sns_response = sns_client.publish(
             TopicArn=sns_topic_arn,
             Message=message,
-            Subject='Model Accuracy Report'
+            Subject='Reporte de presicion del modelo'
         )
 
         return {
