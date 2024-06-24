@@ -3,6 +3,7 @@ import boto3
 import requests
 import csv
 import json
+from datetime import datetime
 
 s3_client = boto3.client('s3')
 sns_client = boto3.client('sns')
@@ -99,19 +100,23 @@ def lambda_handler(event, context):
         # Calculate accuracy
         accuracy = calculate_accuracy(predicted_qualities, actual_qualities)
 
+        # Get current date and time
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         # Create message for SNS
-        message = f"Cantidad de datos usados en el test: {total_data}\n"
+        message = f"Fecha y hora de la evaluación: {current_time}\n"
+        message += f"Cantidad de datos usados en el test: {total_data}\n"
         message += f"Precision del modelo: {accuracy}%\n"
         if accuracy < 80:
             message += "El modelo puede estar desactualizado."
         else:
-            message += "El modelo esta actualizado"
+            message += "El modelo está actualizado."
 
         # Send message to SNS
         sns_response = sns_client.publish(
             TopicArn=sns_topic_arn,
             Message=message,
-            Subject='Reporte de presicion del modelo'
+            Subject='Reporte de precisión del modelo'
         )
 
         return {
