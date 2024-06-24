@@ -58,10 +58,27 @@ def lambda_handler(event, context):
         predicted_qualities = []
         actual_qualities = [float(row['quality']) for row in csv_data]
 
+        # Convert keys to match what the API expects
+        def convert_keys(row):
+            return {
+                "fixed_acidity": float(row['fixed acidity']),
+                "volatile_acidity": float(row['volatile acidity']),
+                "citric_acid": float(row['citric acid']),
+                "residual_sugar": float(row['residual sugar']),
+                "chlorides": float(row['chlorides']),
+                "free_sulfur_dioxide": float(row['free sulfur dioxide']),
+                "total_sulfur_dioxide": float(row['total sulfur dioxide']),
+                "density": float(row['density']),
+                "pH": float(row['pH']),
+                "sulphates": float(row['sulphates']),
+                "alcohol": float(row['alcohol'])
+            }
+
         # Process data in batches of 12
         batch_size = 12
         for i in range(0, len(csv_data), batch_size):
             batch = csv_data[i:i+batch_size]
+            batch = [convert_keys(row) for row in batch]
             # Log batch being sent
             print(f"Sending batch: {batch}")
             # Send batch to API for prediction
