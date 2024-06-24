@@ -46,7 +46,7 @@ def lambda_handler(event, context):
             "pH": 3.39,
             "sulphates": 0.66,
             "alcohol": 11,
-            "quality": 4.0  # Esta es la calidad real
+            "quality": 6.0  # Esta es la calidad real
         }
 
         response = requests.post(api_url, headers=headers, json=data)
