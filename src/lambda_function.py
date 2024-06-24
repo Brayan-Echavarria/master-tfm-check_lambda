@@ -62,9 +62,20 @@ def lambda_handler(event, context):
         batch_size = 12
         for i in range(0, len(csv_data), batch_size):
             batch = csv_data[i:i+batch_size]
+            # Log batch being sent
+            print(f"Sending batch: {batch}")
             # Send batch to API for prediction
             response = requests.post(api_url, headers=headers, json=batch)
-            response.raise_for_status()
+            try:
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as err:
+                print(f"Request failed: {err}")
+                print(f"Response text: {response.text}")
+                raise
+            
+            # Log response
+            print(f"Response received: {response.json()}")
+            
             # Append predicted qualities to list
             predicted_qualities.extend(response.json().get('qualities'))
         
