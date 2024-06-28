@@ -5,8 +5,10 @@ import csv
 import json
 from datetime import datetime
 
-s3_client = boto3.client('s3')
-sns_client = boto3.client('sns')
+def get_clients():
+    s3_client = boto3.client('s3')
+    sns_client = boto3.client('sns')
+    return s3_client, sns_client
 
 def get_cognito_token(client_id, client_secret, token_url, scope):
     payload = {
@@ -22,7 +24,7 @@ def get_cognito_token(client_id, client_secret, token_url, scope):
     response.raise_for_status()
     return response.json()['access_token']
 
-def read_csv_from_s3(bucket, key):
+def read_csv_from_s3(s3_client, bucket, key):
     response = s3_client.get_object(Bucket=bucket, Key=key)
     content = response['Body'].read().decode('utf-8').splitlines()
     return list(csv.DictReader(content, delimiter=';'))
@@ -33,7 +35,10 @@ def calculate_accuracy(predicted_qualities, actual_qualities):
     accuracy = (correct / total) * 100
     return accuracy
 
-def lambda_handler(event, context):
+def lambda_handler(event, context, s3_client=None, sns_client=None):
+    if s3_client is None or sns_client is None:
+        s3_client, sns_client = get_clients()
+
     sns_topic_arn = os.environ['SNS_TOPIC_ARN']
     cognito_client_id = os.environ['COGNITO_CLIENT_ID']
     cognito_client_secret = os.environ['COGNITO_CLIENT_SECRET']
@@ -53,7 +58,7 @@ def lambda_handler(event, context):
         }
 
         # Read and process CSV data from S3
-        csv_data = read_csv_from_s3(bucket_name, csv_key)
+        csv_data = read_csv_from_s3(s3_client, bucket_name, csv_key)
         
         total_data = len(csv_data)
         predicted_qualities = []
