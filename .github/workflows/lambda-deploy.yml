@@ -19,6 +19,11 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Install jq
         run: sudo apt-get install jq
 
@@ -31,16 +36,19 @@ jobs:
           echo "::set-output name=lambda_function_name::$(echo $config | jq -r .environment.lambda_function_name)"
           echo "::set-output name=s3_key::$(echo $config | jq -r .environment.s3_key)"
 
+      - name: Run unit tests
+        run: |
+          python -m unittest discover -s src/tests
+
       - name: Package Lambda function
         run: |
           mkdir -p package
           cp -r src/* package/
-          pip install --upgrade pip
           pip install --target ./package -r requirements.txt
           cd package
           zip -r ../lambda_function.zip .
           cd ..
-          
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
