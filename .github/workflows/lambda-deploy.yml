@@ -19,11 +19,6 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Install jq
         run: sudo apt-get install jq
 
@@ -35,6 +30,11 @@ jobs:
           echo "::set-output name=bucket_name::$(echo $config | jq -r .environment.bucket_name)"
           echo "::set-output name=lambda_function_name::$(echo $config | jq -r .environment.lambda_function_name)"
           echo "::set-output name=s3_key::$(echo $config | jq -r .environment.s3_key)"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run tests
         env:
