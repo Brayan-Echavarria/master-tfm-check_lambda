@@ -36,9 +36,13 @@ jobs:
           echo "::set-output name=lambda_function_name::$(echo $config | jq -r .environment.lambda_function_name)"
           echo "::set-output name=s3_key::$(echo $config | jq -r .environment.s3_key)"
 
-      - name: Run unit tests
+      - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
         run: |
-          python -m unittest discover -s src/tests
+          cd src
+          python -m unittest discover tests
+          cd ..
 
       - name: Package Lambda function
         run: |
